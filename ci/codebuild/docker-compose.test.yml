@@ -1,0 +1,16 @@
+version: "3.3"
+services:
+  grpc-template-dev:
+    image: "grpc-template-test:latest"
+    volumes:
+      - /app/node_modules
+    command: "/bin/sh docker-run.sh"
+    build:
+      context: .
+    env_file:
+      - ./.env
+    environment:
+      - ENV=test
+    ports:
+      - "4005:4005"
+      - "4006:4006"

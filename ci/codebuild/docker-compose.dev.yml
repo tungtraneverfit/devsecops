@@ -1,0 +1,16 @@
+version: "3.3"
+services:
+  devops-demo-app-dev:
+    image: "devops-demo-app-dev:latest"
+    volumes:
+      - /app/node_modules
+    command: "/bin/sh docker-run.sh"
+    build:
+      context: .
+    env_file:
+      - ./.env
+    environment:
+      - ENV=dev
+    ports:
+      - "4005:4005"
+      - "4006:4006"
