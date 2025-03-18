@@ -30,7 +30,7 @@ phases:
       # - echo "Running SonarCloud Analysis"
       # - sonar-scanner -Dsonar.projectKey=quangtung-organization_devsecops -Dsonar.organization=quangtung-organization -Dsonar.host.url=https://sonarcloud.io -Dsonar.branch.name=develop -Dsonar.token=dc4f1bb5fb84d870d60424afa23499aa8bf14eb7
       - snyk auth d64b286a-4cf5-43b5-acbc-3b43938d5c02
-      - snyk test --all-projects
+      - snyk test --all-projects --fail-on=upgradable
       - snyk monitor --all-projects
 
   post_build:
