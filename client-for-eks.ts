@@ -59,6 +59,16 @@ const multiHealthcheck = async () => {
   }
 }
 
+const multiHealthcheck2 = async () => {
+  try {
+    await healthCheck();
+    await healthCheckHTTP();
+
+  } catch (error) {
+    console.log(error)
+  }
+}
+
 const runMultipleUploads = async () => {
   const numberOfUploads = 10000;
   const uploadPromises: Promise<void>[] = [];
