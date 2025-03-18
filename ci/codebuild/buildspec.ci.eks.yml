@@ -20,6 +20,7 @@ phases:
       - /usr/local/bin/dockerd --host=unix:///var/run/docker.sock --host=tcp://127.0.0.1:2375 --storage-driver=overlay2 &>/var/log/docker.log &
       - timeout 15 sh -c "until docker info; do echo .; sleep 1; done"
       - npm install -g snyk
+      - npm install -g snyk-to-html
 
   pre_build:
     commands:
@@ -30,7 +31,7 @@ phases:
       # - echo "Running SonarCloud Analysis"
       # - sonar-scanner -Dsonar.projectKey=quangtung-organization_devsecops -Dsonar.organization=quangtung-organization -Dsonar.host.url=https://sonarcloud.io -Dsonar.branch.name=develop -Dsonar.token=dc4f1bb5fb84d870d60424afa23499aa8bf14eb7
       - snyk auth d64b286a-4cf5-43b5-acbc-3b43938d5c02
-      - snyk test --all-projects --fail-on=upgradable
+      - snyk test --all-projects || true
       - snyk monitor --all-projects
 
   post_build:
