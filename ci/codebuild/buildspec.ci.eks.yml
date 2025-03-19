@@ -55,6 +55,8 @@ phases:
     commands:
       - echo "this is post build"
 
-artifacts:
-  files:
-    - zap_report.html
+secondary-artifacts:
+  output:
+    files:
+      - zap_report.html
+    discard-paths: no
