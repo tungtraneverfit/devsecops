@@ -37,3 +37,5 @@ phases:
   post_build:
     commands:
       - echo "this is post build"
+      - export JWT_TOKEN=$(curl -s --location ${DAST_URL} --header 'x-app-type: web-coach' --header 'Content-Type: application/json' --data-raw '{"email":"${DAST_EMAIL}","password":"${DAST_PASSWORD}"}' | jq -r '.token')
+      - echo $JWT_TOKEN
