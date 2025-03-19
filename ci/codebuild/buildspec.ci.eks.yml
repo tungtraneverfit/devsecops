@@ -58,8 +58,7 @@ phases:
     commands:
       - echo "this is post build"
 
-secondary-artifacts:
-  output:
-    files:
-      - zap_report.html
-      - ../zap_report.html
+artifacts:
+  files:
+    - zap_report.html
+    - ../zap_report.html
