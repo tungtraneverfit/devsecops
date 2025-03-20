@@ -33,26 +33,28 @@ phases:
       - snyk auth d64b286a-4cf5-43b5-acbc-3b43938d5c02
       - snyk test --all-projects || true
       - snyk monitor --all-projects
+      - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $REPOSITORY_URL
+      - docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --format template --template "@contrib/html.tpl" --output trivy.html $REPOSITORY_URL:latest
       # - export JWT_TOKEN=$(curl -s --location ${DAST_URL} --header 'x-app-type: web-coach' --header 'Content-Type: application/json' --data-raw '{"email":"${DAST_EMAIL}","password":"${DAST_PASSWORD}"}' | jq -r '.token')
-      - |
-        export JWT_TOKEN=$(curl -s --location "${DAST_URL}" \
-          --header "x-app-type: web-coach" \
-          --header "Content-Type: application/json" \
-          --data-raw "{\"email\":\"${DAST_EMAIL}\",\"password\":\"${DAST_PASSWORD}\"}" \
-          | jq -r '.token')
+      # - |
+      #   export JWT_TOKEN=$(curl -s --location "${DAST_URL}" \
+      #     --header "x-app-type: web-coach" \
+      #     --header "Content-Type: application/json" \
+      #     --data-raw "{\"email\":\"${DAST_EMAIL}\",\"password\":\"${DAST_PASSWORD}\"}" \
+      #     | jq -r '.token')
 
-      - echo $JWT_TOKEN
+      # - echo $JWT_TOKEN
 
-      - yum update
-      - yum -y install wget
-      - java -version
-      - wget https://github.com/zaproxy/zaproxy/releases/download/v2.16.0/ZAP_2.16.0_Linux.tar.gz
-      - tar -xvf ZAP_2.16.0_Linux.tar.gz
-      - cd ZAP_2.16.0
-      - ./zap.sh -cmd -quickurl https://$DAST_TARGET -quickprogress -quickout ../zap_report.html
-      - pwd
-      - ls ./
-      - ls ../
+      # - yum update
+      # - yum -y install wget
+      # - java -version
+      # - wget https://github.com/zaproxy/zaproxy/releases/download/v2.16.0/ZAP_2.16.0_Linux.tar.gz
+      # - tar -xvf ZAP_2.16.0_Linux.tar.gz
+      # - cd ZAP_2.16.0
+      # - ./zap.sh -cmd -quickurl https:// -quickprogress -quickout ../zap_report.html
+      # - pwd
+      # - ls ./
+      # - ls ../
 
   post_build:
     commands:
