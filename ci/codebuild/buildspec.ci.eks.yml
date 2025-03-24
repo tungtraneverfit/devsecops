@@ -26,6 +26,9 @@ phases:
       - sudo chmod +x /usr/local/bin/trivy
       - trivy --version
       - python3 -m pip install semgrep
+      - ls -la ./bin
+      - sudo mv ./bin/semgrep /usr/local/bin/semgrep
+      - sudo chmod +x /usr/local/bin/semgrep
       - semgrep --version
       - mkdir report
       - mkdir report/result
