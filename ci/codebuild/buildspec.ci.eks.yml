@@ -21,6 +21,8 @@ phases:
       - timeout 15 sh -c "until docker info; do echo .; sleep 1; done"
       - npm install -g snyk
       - npm install -g snyk-to-html
+      - curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sudo sh
+      - trivy --version
 
   pre_build:
     commands:
@@ -28,13 +30,18 @@ phases:
 
   build:
     commands:
-      # - echo "Running SonarCloud Analysis"
-      # - sonar-scanner -Dsonar.projectKey=quangtung-organization_devsecops -Dsonar.organization=quangtung-organization -Dsonar.host.url=https://sonarcloud.io -Dsonar.branch.name=develop -Dsonar.token=dc4f1bb5fb84d870d60424afa23499aa8bf14eb7
+      - echo "gitleaks"
+      - docker run --rm -v $(pwd):/path zricethezav/gitleaks:latest detect --no-git --source /path --report-path /path/report/result/gitleaks.sarif --report-format sarif
+      - echo "Running SonarCloud Analysis"
+      - sonar-scanner -Dsonar.projectKey=quangtung-organization_devsecops -Dsonar.organization=quangtung-organization -Dsonar.host.url=https://sonarcloud.io -Dsonar.branch.name=develop -Dsonar.token=dc4f1bb5fb84d870d60424afa23499aa8bf14eb7
       - snyk auth d64b286a-4cf5-43b5-acbc-3b43938d5c02
       - snyk test --all-projects || true
+
       - snyk monitor --all-projects
+      - trivy fs . --scanners vuln,secret,config,license --severity HIGH,CRITICAL --format json --output report/result/trivy-fs.json
       - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $REPOSITORY_URL
-      - docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --format template --template "@contrib/html.tpl" --output trivy.html $REPOSITORY_URL:latest
+      - trivy image --format json --scanners vuln,secret,config,lic ense --output /output/trivy.json --severity HIGH,CRITICAL $REPOSITORY_URL:latest
+
       # - export JWT_TOKEN=$(curl -s --location ${DAST_URL} --header 'x-app-type: web-coach' --header 'Content-Type: application/json' --data-raw '{"email":"${DAST_EMAIL}","password":"${DAST_PASSWORD}"}' | jq -r '.token')
       # - |
       #   export JWT_TOKEN=$(curl -s --location "${DAST_URL}" \
@@ -59,8 +66,7 @@ phases:
   post_build:
     commands:
       - echo "this is post build"
-
-artifacts:
-  files:
-    - zap_report.html
-    - ../zap_report.html
+# artifacts:
+#   files:
+#     - zap_report.html
+#     - ../zap_report.html
