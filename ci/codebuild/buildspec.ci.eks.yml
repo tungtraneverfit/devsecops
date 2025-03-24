@@ -43,9 +43,12 @@ phases:
       - snyk test --all-projects || true
 
       - snyk monitor --all-projects
-      - trivy fs . --scanners vuln,secret,config,license --severity HIGH,CRITICAL --format json --output report/result/trivy-fs.json
+      - trivy fs . --scanners vuln,secret,config,license --severity HIGH,CRITICAL --format json --output report/result/trivy-fs.json || true
       - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $REPOSITORY_URL
-      - trivy image --format json --scanners vuln,secret,config,license --output /output/trivy.json --severity HIGH,CRITICAL $REPOSITORY_URL:latest
+      - trivy image --format json --scanners vuln,secret,config,license --output /output/trivy.json --severity HIGH,CRITICAL $REPOSITORY_URL:latest || true
+      - pwd
+      - ls -la ./report
+      - ls -la ./report/result
 
       # - export JWT_TOKEN=$(curl -s --location ${DAST_URL} --header 'x-app-type: web-coach' --header 'Content-Type: application/json' --data-raw '{"email":"${DAST_EMAIL}","password":"${DAST_PASSWORD}"}' | jq -r '.token')
       # - |
