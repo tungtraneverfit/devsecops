@@ -25,11 +25,11 @@ phases:
       - sudo mv ./bin/trivy /usr/local/bin/trivy
       - sudo chmod +x /usr/local/bin/trivy
       - trivy --version
-      - python3 -m pip install semgrep
-      - ls -la ./bin
-      - sudo mv ./bin/semgrep /usr/local/bin/semgrep
-      - sudo chmod +x /usr/local/bin/semgrep
-      - semgrep --version
+      # - python3 -m pip install semgrep
+      # - ls -la ./bin
+      # - sudo mv ./bin/semgrep /usr/local/bin/semgrep
+      # - sudo chmod +x /usr/local/bin/semgrep
+      # - semgrep --version
       - mkdir report
       - mkdir report/result
       - mkdir report/htm-result
@@ -51,7 +51,7 @@ phases:
       - trivy fs . --scanners vuln,secret,config,license --severity HIGH,CRITICAL --format json --output report/result/trivy-fs.json || true
       - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $REPOSITORY_URL
       - trivy image --format json --scanners vuln,secret,config,license --output /output/trivy.json --severity HIGH,CRITICAL $REPOSITORY_URL:latest || true
-      - semgrep --config p/default --config p/r2c-security-audit --config p/owasp-top-ten --config p/cwe-top-25 --config p/xss --config p/insecure-transport --config p/findsecbugs --config p/jwt --config p/sql-injection --config p/command-injection --config p/secrets --config p/trailofbits --config p/java --config p/javascript --config p/python --config p/react --config p/docker-compose --config p/dockerfile --config p/nginx --config p/terraform --sarif --exclude report/ > report/result/semgrep.sarif
+      - docker run --rm -v $(pwd):/src returntocorp/semgrep semgrep --config p/default --config p/r2c-security-audit --config p/owasp-top-ten --config p/cwe-top-25 --config p/xss --config p/insecure-transport --config p/findsecbugs --config p/jwt --config p/sql-injection --config p/command-injection --config p/secrets --config p/trailofbits --config p/java --config p/javascript --config p/python --config p/react --config p/docker-compose --config p/dockerfile --config p/nginx --config p/terraform --exclude report/ --sarif > report/result/semgrep.sarif
       - pwd
       - ls -la ./report
       - ls -la ./report/result
