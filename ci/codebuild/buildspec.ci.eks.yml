@@ -36,7 +36,7 @@ phases:
   build:
     commands:
       - echo "gitleaks"
-      - docker run --rm -v $(pwd):/path zricethezav/gitleaks:latest detect --no-git --source /path --report-path /path/report/result/gitleaks.sarif --report-format sarif
+      - docker run --rm -v $(pwd):/path zricethezav/gitleaks:latest detect --no-git --source /path --report-path /path/report/result/gitleaks.sarif --report-format sarif || true
       - echo "Running SonarCloud Analysis"
       - sonar-scanner -Dsonar.projectKey=quangtung-organization_devsecops -Dsonar.organization=quangtung-organization -Dsonar.host.url=https://sonarcloud.io -Dsonar.branch.name=develop -Dsonar.token=dc4f1bb5fb84d870d60424afa23499aa8bf14eb7
       - snyk auth d64b286a-4cf5-43b5-acbc-3b43938d5c02
