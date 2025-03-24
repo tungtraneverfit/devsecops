@@ -25,6 +25,8 @@ phases:
       - sudo mv ./bin/trivy /usr/local/bin/trivy
       - sudo chmod +x /usr/local/bin/trivy
       - trivy --version
+      - mkdir report/result
+      - mkdir report/htm-result
 
   pre_build:
     commands:
