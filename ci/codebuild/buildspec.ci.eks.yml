@@ -22,6 +22,8 @@ phases:
       - npm install -g snyk
       - npm install -g snyk-to-html
       - curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sudo sh
+      - sudo mv ./bin/trivy /usr/local/bin/trivy
+      - sudo chmod +x /usr/local/bin/trivy
       - trivy --version
 
   pre_build:
