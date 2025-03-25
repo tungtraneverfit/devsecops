@@ -50,12 +50,14 @@ phases:
       - snyk monitor --all-projects
       - trivy fs . --scanners vuln,secret,config,license --severity HIGH,CRITICAL --format json --output report/result/trivy-fs.json || true
       - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $REPOSITORY_URL
-      - trivy image --format json --scanners vuln,secret,config,license --output /output/trivy.json --severity HIGH,CRITICAL $REPOSITORY_URL:latest || true
+      - trivy image --format json --scanners vuln,secret,config,license --output report/result/trivy-image.json --severity HIGH,CRITICAL $REPOSITORY_URL:latest || true
       - docker run --rm -v $(pwd):/src returntocorp/semgrep semgrep --config p/default --config p/r2c-security-audit --config p/owasp-top-ten --config p/cwe-top-25 --config p/xss --config p/insecure-transport --config p/findsecbugs --config p/jwt --config p/sql-injection --config p/command-injection --config p/secrets --config p/trailofbits --config p/java --config p/javascript --config p/python --config p/react --config p/docker-compose --config p/dockerfile --config p/nginx --config p/terraform --exclude report/ --sarif > report/result/semgrep.sarif
       - pwd
       - ls -la ./report
       - ls -la ./report/result
-
+      - aws eks update-kubeconfig --name eks-worker-dev-ap-se-1 --region ap-southeast-1 --profile eg-dev
+      - trivy k8s --report all --timeout 15m --skip-images --scanners vuln,secret,misconfig,rbac --format json -o report/result/trivy-k8s.json
+      - trivy scan2html generate --scan2html-flags --output report/html_result/trivy.html --from report/result/trivy-fs.json,report/result/trivy-image.json,report/result/trivy-k8s.json
       # - export JWT_TOKEN=$(curl -s --location ${DAST_URL} --header 'x-app-type: web-coach' --header 'Content-Type: application/json' --data-raw '{"email":"${DAST_EMAIL}","password":"${DAST_PASSWORD}"}' | jq -r '.token')
       # - |
       #   export JWT_TOKEN=$(curl -s --location "${DAST_URL}" \
@@ -80,7 +82,6 @@ phases:
   post_build:
     commands:
       - echo "this is post build"
-# artifacts:
-#   files:
-#     - zap_report.html
-#     - ../zap_report.html
+artifacts:
+  files:
+    - report/**/*
