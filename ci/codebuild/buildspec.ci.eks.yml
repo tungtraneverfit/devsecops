@@ -25,6 +25,7 @@ phases:
       - sudo mv ./bin/trivy /usr/local/bin/trivy
       - sudo chmod +x /usr/local/bin/trivy
       - trivy --version
+      - trivy plugin install scan2html
       # - python3 -m pip install semgrep
       # - ls -la ./bin
       # - sudo mv ./bin/semgrep /usr/local/bin/semgrep
