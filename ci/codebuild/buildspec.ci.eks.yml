@@ -55,7 +55,7 @@ phases:
       - pwd
       - ls -la ./report
       - ls -la ./report/result
-      - aws eks update-kubeconfig --name eks-worker-dev-ap-se-1 --region ap-southeast-1 --profile eg-dev
+      - aws eks update-kubeconfig --name eks-worker-dev-ap-se-1 --region ap-southeast-1
       - trivy k8s --report all --timeout 15m --skip-images --scanners vuln,secret,misconfig,rbac --format json -o report/result/trivy-k8s.json
       - trivy scan2html generate --scan2html-flags --output report/html_result/trivy.html --from report/result/trivy-fs.json,report/result/trivy-image.json,report/result/trivy-k8s.json
       # - export JWT_TOKEN=$(curl -s --location ${DAST_URL} --header 'x-app-type: web-coach' --header 'Content-Type: application/json' --data-raw '{"email":"${DAST_EMAIL}","password":"${DAST_PASSWORD}"}' | jq -r '.token')
