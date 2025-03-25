@@ -26,15 +26,10 @@ phases:
       - sudo chmod +x /usr/local/bin/trivy
       - trivy --version
       - trivy plugin install scan2html
-      # - python3 -m pip install semgrep
-      # - ls -la ./bin
-      # - sudo mv ./bin/semgrep /usr/local/bin/semgrep
-      # - sudo chmod +x /usr/local/bin/semgrep
-      # - semgrep --version
       - mkdir report
       - mkdir report/result
       - mkdir report/html-result
-      - aws s3 cp s3://$SECRET_BUCKET_NAME/$ENV/ . --recursive
+      # - aws s3 cp s3://$SECRET_BUCKET_NAME/$ENV/ . --recursive
 
   pre_build:
     commands:
@@ -48,7 +43,6 @@ phases:
       - sonar-scanner -Dsonar.projectKey=quangtung-organization_devsecops -Dsonar.organization=quangtung-organization -Dsonar.host.url=https://sonarcloud.io -Dsonar.branch.name=develop -Dsonar.token=dc4f1bb5fb84d870d60424afa23499aa8bf14eb7
       - snyk auth d64b286a-4cf5-43b5-acbc-3b43938d5c02
       - snyk test --all-projects || true
-
       - snyk monitor --all-projects
       - trivy fs . --scanners vuln,secret,config,license --severity HIGH,CRITICAL --format json --output report/result/trivy-fs.json || true
       - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $REPOSITORY_URL
@@ -60,29 +54,8 @@ phases:
       - aws eks update-kubeconfig --name eks-worker-dev-us-w-2 --region us-west-2
       - trivy k8s --report all --timeout 15m --skip-images --scanners vuln,secret,misconfig,rbac --format json -o report/result/trivy-k8s.json || true
       - trivy scan2html generate --scan2html-flags --output report/html-result/trivy.html --from report/result/trivy-fs.json,report/result/trivy-image.json,report/result/trivy-k8s.json
-      - python3 gitleaks.py report/result/gitleaks.sarif report/html-result/gitleaks.html
-      - python3 semgrep.py report/result/semgrep.sarif report/html-result/semgrep.html
-      # - export JWT_TOKEN=$(curl -s --location ${DAST_URL} --header 'x-app-type: web-coach' --header 'Content-Type: application/json' --data-raw '{"email":"${DAST_EMAIL}","password":"${DAST_PASSWORD}"}' | jq -r '.token')
-      # - |
-      #   export JWT_TOKEN=$(curl -s --location "${DAST_URL}" \
-      #     --header "x-app-type: web-coach" \
-      #     --header "Content-Type: application/json" \
-      #     --data-raw "{\"email\":\"${DAST_EMAIL}\",\"password\":\"${DAST_PASSWORD}\"}" \
-      #     | jq -r '.token')
-
-      # - echo $JWT_TOKEN
-
-      # - yum update
-      # - yum -y install wget
-      # - java -version
-      # - wget https://github.com/zaproxy/zaproxy/releases/download/v2.16.0/ZAP_2.16.0_Linux.tar.gz
-      # - tar -xvf ZAP_2.16.0_Linux.tar.gz
-      # - cd ZAP_2.16.0
-      # - ./zap.sh -cmd -quickurl https:// -quickprogress -quickout ../zap_report.html
-      # - pwd
-      # - ls ./
-      # - ls ../
-
+      # - python3 gitleaks.py report/result/gitleaks.sarif report/html-result/gitleaks.html
+      # - python3 semgrep.py report/result/semgrep.sarif report/html-result/semgrep.html
   post_build:
     commands:
       - echo "this is post build"
