@@ -52,7 +52,7 @@ phases:
       - aws eks update-kubeconfig --name eks-worker-dev-us-w-2 --region us-west-2
       - trivy k8s --report all --timeout 15m --skip-images --scanners vuln,secret,misconfig,rbac --format json -o report/result/trivy-k8s.json || true
       - echo "Report Processing"
-      - aws s3 cp report/ s3://$SECRET_BUCKET_NAME/devsecops/ --recursive
+      - aws s3 cp s3://$SECRET_BUCKET_NAME/$ENV/ . --recursive
       - trivy scan2html generate --scan2html-flags --output report/html-result/trivy.html --from report/result/trivy-fs.json,report/result/trivy-image.json,report/result/trivy-k8s.json
       - python3 gitleaks.py report/result/gitleaks.sarif report/html-result/gitleaks.html
       - python3 semgrep.py report/result/semgrep.sarif report/html-result/semgrep.html
