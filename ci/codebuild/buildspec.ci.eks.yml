@@ -33,7 +33,7 @@ phases:
       # - semgrep --version
       - mkdir report
       - mkdir report/result
-      - mkdir report/htm-result
+      - mkdir report/html-result
       - aws s3 cp s3://$SECRET_BUCKET_NAME/$ENV/ . --recursive
 
   pre_build:
