@@ -12,8 +12,6 @@ phases:
       - unzip -o $HOME/.sonar/sonar-scanner.zip -d $HOME/.sonar/
       - export PATH=$SONAR_SCANNER_HOME/bin:$PATH
       - export SONAR_SCANNER_OPTS="-server"
-      # - yum install zip bash gettext jq wget -y
-      # Install docker-compose
       - docker --version
       - docker-compose version
       # Launch docker daemon
@@ -26,9 +24,8 @@ phases:
       - sudo chmod +x /usr/local/bin/trivy
       - trivy --version
       - trivy plugin install scan2html
-      - mkdir report
-      - mkdir report/result
-      - mkdir report/html-result
+      - mkdir -p report/result
+      - mkdir -p report/html-result
       # - aws s3 cp s3://$SECRET_BUCKET_NAME/$ENV/ . --recursive
 
   pre_build:
@@ -37,25 +34,28 @@ phases:
 
   build:
     commands:
-      - echo "gitleaks"
+      - echo "Pretest Phase"
       - docker run --rm -v $(pwd):/path zricethezav/gitleaks:latest detect --no-git --source /path --report-path /path/report/result/gitleaks.sarif --report-format sarif || true
+      - echo "SAST"
       - echo "Running SonarCloud Analysis"
       - sonar-scanner -Dsonar.projectKey=quangtung-organization_devsecops -Dsonar.organization=quangtung-organization -Dsonar.host.url=https://sonarcloud.io -Dsonar.branch.name=develop -Dsonar.token=dc4f1bb5fb84d870d60424afa23499aa8bf14eb7
+      - docker run --rm -v $(pwd):/src returntocorp/semgrep semgrep --config p/default --config p/r2c-security-audit --config p/owasp-top-ten --config p/cwe-top-25 --config p/xss --config p/insecure-transport --config p/findsecbugs --config p/jwt --config p/sql-injection --config p/command-injection --config p/secrets --config p/trailofbits --config p/javascript --config p/python --config p/react --config p/docker-compose --config p/dockerfile --config p/expressjs --config p/typescript --config p/gitleaks --config p/nestjs --exclude report/ --sarif > report/result/semgrep.sarif
+      - echo "SCA"
       - snyk auth d64b286a-4cf5-43b5-acbc-3b43938d5c02
       - snyk test --all-projects || true
       - snyk monitor --all-projects
       - trivy fs . --scanners vuln,secret,config,license --severity HIGH,CRITICAL --format json --output report/result/trivy-fs.json || true
+      - echo "Container scaning"
       - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $REPOSITORY_URL
       - trivy image --format json --scanners vuln,secret,config,license --output report/result/trivy-image.json --severity HIGH,CRITICAL $REPOSITORY_URL:latest || true
-      - docker run --rm -v $(pwd):/src returntocorp/semgrep semgrep --config p/default --config p/r2c-security-audit --config p/owasp-top-ten --config p/cwe-top-25 --config p/xss --config p/insecure-transport --config p/findsecbugs --config p/jwt --config p/sql-injection --config p/command-injection --config p/secrets --config p/trailofbits --config p/java --config p/javascript --config p/python --config p/react --config p/docker-compose --config p/dockerfile --config p/nginx --config p/terraform --exclude report/ --sarif > report/result/semgrep.sarif
-      - pwd
-      - ls -la ./report
-      - ls -la ./report/result
+      - echo "cluster scaning"
       - aws eks update-kubeconfig --name eks-worker-dev-us-w-2 --region us-west-2
       - trivy k8s --report all --timeout 15m --skip-images --scanners vuln,secret,misconfig,rbac --format json -o report/result/trivy-k8s.json || true
+      - echo "Report Processing"
+      - aws s3 cp report/ s3://$SECRET_BUCKET_NAME/devsecops/ --recursive
       - trivy scan2html generate --scan2html-flags --output report/html-result/trivy.html --from report/result/trivy-fs.json,report/result/trivy-image.json,report/result/trivy-k8s.json
-      # - python3 gitleaks.py report/result/gitleaks.sarif report/html-result/gitleaks.html
-      # - python3 semgrep.py report/result/semgrep.sarif report/html-result/semgrep.html
+      - python3 gitleaks.py report/result/gitleaks.sarif report/html-result/gitleaks.html
+      - python3 semgrep.py report/result/semgrep.sarif report/html-result/semgrep.html
   post_build:
     commands:
       - echo "this is post build"
