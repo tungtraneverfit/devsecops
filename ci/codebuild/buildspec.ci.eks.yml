@@ -42,7 +42,7 @@ phases:
       - docker run --rm -v $(pwd):/src returntocorp/semgrep semgrep --config p/default --config p/r2c-security-audit --config p/owasp-top-ten --config p/cwe-top-25 --config p/xss --config p/insecure-transport --config p/findsecbugs --config p/jwt --config p/sql-injection --config p/command-injection --config p/secrets --config p/trailofbits --config p/javascript --config p/python --config p/react --config p/docker-compose --config p/dockerfile --config p/expressjs --config p/typescript --config p/gitleaks --config p/nestjs --exclude report/ --sarif > report/result/semgrep.sarif
       - echo "SCA"
       - snyk auth d64b286a-4cf5-43b5-acbc-3b43938d5c02
-      - snyk test --all-projects --json || true > report/result/snyk.json
+      - snyk test --all-projects --json > report/result/snyk.json
       - snyk monitor --all-projects
       - trivy fs . --scanners vuln,secret,config,license --severity HIGH,CRITICAL --format json --output report/result/trivy-fs.json || true
       - echo "Container scaning"
