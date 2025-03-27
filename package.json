@@ -34,8 +34,7 @@
     "@opentelemetry/winston-transport": "^0.10.0",
     "dotenv": "^16.4.7",
     "express": "^4.17.1",
-    "grpc": "^1.24.11",
-    "nodemon": "^2.0.22",
+    "nodemon": "^3.0.22",
     "uuid": "^8.3.2",
     "winston": "^3.17.0",
     "yarn": "^1.22.21"
