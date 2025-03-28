@@ -37,18 +37,20 @@ phases:
       - echo "Pretest Phase"
       - docker run --rm -v $(pwd):/path zricethezav/gitleaks:latest detect --no-git --source /path --report-path /path/report/result/gitleaks.sarif --report-format sarif || true
       - echo "SAST"
-      - echo "Running SonarCloud Analysis"
+      # - echo "Running SonarCloud Analysis"
       # - sonar-scanner -Dsonar.projectKey=quangtung-organization_devsecops -Dsonar.organization=quangtung-organization -Dsonar.host.url=https://sonarcloud.io -Dsonar.branch.name=develop -Dsonar.token=dc4f1bb5fb84d870d60424afa23499aa8bf14eb7
       - docker run --rm -v $(pwd):/src returntocorp/semgrep semgrep --config p/default --config p/r2c-security-audit --config p/owasp-top-ten --config p/cwe-top-25 --config p/xss --config p/insecure-transport --config p/findsecbugs --config p/jwt --config p/sql-injection --config p/command-injection --config p/secrets --config p/trailofbits --config p/javascript --config p/python --config p/react --config p/docker-compose --config p/dockerfile --config p/expressjs --config p/typescript --config p/gitleaks --config p/nestjs --exclude report/ --sarif > report/result/semgrep.sarif
+      - snyk code test --sarif --severity-threshold=high > report/result/snyk-sast.sarif
       - echo "SCA"
       - snyk auth d64b286a-4cf5-43b5-acbc-3b43938d5c02
       - snyk test --all-projects --json > report/result/snyk.json || true
       - snyk-to-html -i report/result/snyk.json -o report/html-result/snyk.html
       - snyk monitor --all-projects
-      - trivy fs . --scanners vuln,secret,config,license --severity HIGH,CRITICAL --format json --output report/result/trivy-fs.json || true
+      - trivy fs . --scanners vuln,secret --severity HIGH,CRITICAL --format json --output report/result/trivy-fs.json || true
       - echo "Container scaning"
       - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $REPOSITORY_URL
       - trivy image --format json --scanners vuln,secret,config,license --output report/result/trivy-image.json --severity HIGH,CRITICAL $REPOSITORY_URL:latest || true
+      - snyk container test $REPOSITORY_URL:latest --json --severity-threshold=high > report/result/snyk-fs.json || true
       - echo "cluster scaning"
       - aws eks update-kubeconfig --name eks-worker-dev-us-w-2 --region us-west-2
       - trivy k8s --report all --timeout 15m --skip-images --scanners vuln,secret,misconfig,rbac --format json -o report/result/trivy-k8s.json || true
