@@ -115,6 +115,6 @@ def merge_sast(sarif_old_path, sarif_new_path, output_excel_path):
 
 ### ========== MAIN ==========
 if __name__ == "__main__":
-    merge_sca("unique_vulns_filtered2.xlsx", "unique_vulns_filtered.xlsx", "merged_output.xlsx")
-    merge_sast("semgrep.sarif", "semgrep2.sarif", "merged_output.xlsx")
+    # merge_sca("unique_vulns_filtered2.xlsx", "unique_vulns_filtered.xlsx", "merged_output.xlsx")
+    merge_sast("report/result/semgrep.sarif", "report/result/semgrep2.sarif", "merged_output.xlsx")
     print("🎉 All reports merged successfully into merged_output.xlsx")
