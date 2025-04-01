@@ -2,3 +2,10 @@ node_modules
 .DS_Store
 zap.json
 /report
+*.html
+*.xlsx
+*.json
+*.sarif
+convert.py
+!package-lock.json
+!package.json
