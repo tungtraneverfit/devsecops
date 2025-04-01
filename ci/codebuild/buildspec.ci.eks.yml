@@ -45,6 +45,7 @@ phases:
       - echo "SCA"
       - snyk test --all-projects --json > report/result/snyk.json || true
       - snyk-to-html -i report/result/snyk.json -o report/html-result/snyk.html
+      - snyk-to-html -i report/result/snyk-sast.sarif -o report/html-result/snyk-sast.html
       - snyk monitor --all-projects
       - trivy fs . --scanners vuln,secret --severity HIGH,CRITICAL --format json --output report/result/trivy-fs.json || true
       - echo "Container scaning"
