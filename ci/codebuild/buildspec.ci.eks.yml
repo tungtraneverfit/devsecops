@@ -51,7 +51,8 @@ phases:
       - echo "Container scaning"
       - aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $REPOSITORY_URL
       - trivy image --format json --scanners vuln,secret,config,license --output report/result/trivy-image.json --severity HIGH,CRITICAL $REPOSITORY_URL:latest || true
-      - snyk container test $REPOSITORY_URL:latest --json --severity-threshold=high > report/result/snyk-fs.json || true
+      - snyk container test $REPOSITORY_URL:latest --json > report/result/snyk-image.json || true
+      - snyk-to-html -i report/result/snyk-image.json -o report/html-result/snyk-image.html
       - echo "cluster scaning"
       - aws eks update-kubeconfig --name eks-worker-dev-us-w-2 --region us-west-2
       - trivy k8s --report all --timeout 15m --skip-images --scanners vuln,secret,misconfig,rbac --format json -o report/result/trivy-k8s.json || true
