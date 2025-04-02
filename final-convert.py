@@ -44,7 +44,12 @@ def convert_sarif_results(json_path, sheet_name):
                 "Start Line": region.get("startLine", ""),
                 "End Line": region.get("endLine", "")
             })
-    df = pd.DataFrame(parsed)
+    if not parsed:
+        df = pd.DataFrame(columns=[
+            "Rule ID", "Message", "File", "Start Line", "End Line",
+        ])
+    else:
+        df = pd.DataFrame(parsed)
     write_to_excel(df, sheet_name)
 
 
@@ -131,7 +136,13 @@ def convert_trivy_vuln(json_path, sheet_name):
                 "CVSS Vector": v.get("CVSS", {}).get("nvd", {}).get("V3Vector", ""),
                 "References": ", ".join(v.get("References", []))
             })
-    df = pd.DataFrame(rows)
+    if not rows:
+        df = pd.DataFrame(columns=[
+            "Target", "PkgName", "InstalledVersion", "VulnerabilityID", "Severity",
+            "Description", "FixedVersion", "CVSS Score", "CVSS Vector", "References"
+        ])
+    else:
+        df = pd.DataFrame(rows)
     write_to_excel(df, sheet_name)
 
 
@@ -154,7 +165,13 @@ def convert_trivy_k8s(json_path, sheet_name):
                     "Resolution": m.get("Resolution"),
                     "References": ", ".join(m.get("References", [])),
                 })
-    df = pd.DataFrame(rows)
+    if not rows:
+        df = pd.DataFrame(columns=[
+            "Kind", "Name", "Target", "ID", "Title",
+            "Severity", "Message", "Resolution", "References"
+        ])
+    else:
+        df = pd.DataFrame(rows)
     write_to_excel(df, sheet_name)
 
 
