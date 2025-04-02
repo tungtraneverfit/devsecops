@@ -15,15 +15,15 @@ def merge_and_highlight(old_file, new_file, output_file, key_col="ID"):
     df_old["Fixed At"] = ""
     df_new["Fixed At"] = new_file
 
-    # Loại trùng ID, chỉ giữ bản từ file old nếu trùng
+    # Delete dup ID
     ids_old = set(df_old[key_col])
     df_new_filtered = df_new[~df_new[key_col].isin(ids_old)]
 
-    # Gộp bảng
+    # Megre table
     df_combined = pd.concat([df_old, df_new_filtered], ignore_index=True)
     df_combined.to_excel(output_file, index=False, sheet_name="Combined")
 
-    # Tô màu xanh nếu có Fixed At
+    # Highlight
     wb = load_workbook(output_file)
     ws = wb["Combined"]
 
@@ -37,7 +37,7 @@ def merge_and_highlight(old_file, new_file, output_file, key_col="ID"):
     if source_col_idx:
         for row in ws.iter_rows(min_row=2):
             source_val = row[source_col_idx - 1].value
-            if source_val:  # Chỉ highlight nếu Fixed At có giá trị
+            if source_val:  # Only highlight if Fixed At have value
                 for cell in row:
                     cell.fill = green_fill
 

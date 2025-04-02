@@ -3,6 +3,8 @@ import json
 import pandas as pd
 from datetime import datetime
 import os
+from openpyxl import load_workbook
+from openpyxl.styles import PatternFill
 
 
 today = datetime.now()
@@ -19,7 +21,7 @@ def write_to_excel(df, sheet_name):
     if file_exists:
         writer = pd.ExcelWriter(output_file, engine="openpyxl", mode="a", if_sheet_exists="replace")
     else:
-        writer = pd.ExcelWriter(output_file, engine="openpyxl", mode="w")  # <-- Không dùng if_sheet_exists ở đây
+        writer = pd.ExcelWriter(output_file, engine="openpyxl", mode="w")
 
     with writer:
         df.to_excel(writer, sheet_name=sheet_name, index=False)
@@ -48,47 +50,55 @@ def convert_sarif_results(json_path, sheet_name):
         df = pd.DataFrame(columns=[
             "Rule ID", "Message", "File", "Start Line", "End Line",
         ])
+        df = df.sort_values(by="Rule ID", ascending=True)
     else:
         df = pd.DataFrame(parsed)
     write_to_excel(df, sheet_name)
 
 
-def convert_snyk_sast_sarif(json_path, sheet_name="snyk-sast"):
-    with open(json_path, "r", encoding="utf-8") as f:
-        data = json.load(f)
+# def convert_snyk_sast_sarif(json_path, sheet_name="snyk-sast"):
+#     with open(json_path, "r", encoding="utf-8") as f:
+#         data = json.load(f)
 
-    rules = {r.get("id"): r for r in data.get("runs", [])[0].get("tool", {}).get("driver", {}).get("rules", [])}
-    results = data.get("runs", [])[0].get("results", [])
+#     rules = {r.get("id"): r for r in data.get("runs", [])[0].get("tool", {}).get("driver", {}).get("rules", [])}
+#     results = data.get("runs", [])[0].get("results", [])
 
-    rows = []
-    for result in results:
-        rule_id = result.get("ruleId", "")
-        rule = rules.get(rule_id, {})
-        message = result.get("message", {}).get("text", "")
-        level = result.get("level", "")
+#     rows = []
+#     for result in results:
+#         rule_id = result.get("ruleId", "")
+#         rule = rules.get(rule_id, {})
+#         message = result.get("message", {}).get("text", "")
+#         level = result.get("level", "")
 
-        for loc in result.get("locations", []):
-            physical = loc.get("physicalLocation", {})
-            artifact = physical.get("artifactLocation", {}).get("uri", "")
-            region = physical.get("region", {})
-            start_line = region.get("startLine", "")
-            end_line = region.get("endLine", "")
+#         for loc in result.get("locations", []):
+#             physical = loc.get("physicalLocation", {})
+#             artifact = physical.get("artifactLocation", {}).get("uri", "")
+#             region = physical.get("region", {})
+#             start_line = region.get("startLine", "")
+#             end_line = region.get("endLine", "")
 
-            rows.append({
-                "Rule ID": rule_id,
-                "Rule Name": rule.get("name", ""),
-                "Short Description": rule.get("shortDescription", {}).get("text", ""),
-                "Full Description": rule.get("fullDescription", {}).get("text", ""),
-                "Help": rule.get("help", {}).get("text", ""),
-                "Message": message,
-                "Severity": level,
-                "File Path": artifact,
-                "Line Start": start_line,
-                "Line End": end_line
-            })
+#             rows.append({
+#                 "Rule ID": rule_id,
+#                 "Rule Name": rule.get("name", ""),
+#                 "Short Description": rule.get("shortDescription", {}).get("text", ""),
+#                 "Full Description": rule.get("fullDescription", {}).get("text", ""),
+#                 "Help": rule.get("help", {}).get("text", ""),
+#                 "Message": message,
+#                 "Severity": level,
+#                 "File Path": artifact,
+#                 "Line Start": start_line,
+#                 "Line End": end_line
+#             })
 
-    df = pd.DataFrame(rows)
-    write_to_excel(df, sheet_name)
+#     if not rows:
+#         df = pd.DataFrame(columns=[
+#             "Rule ID", "Rule Name", "Short Description", "Full Description",
+#             "Help", "Message", "Severity", "File Path", "Line Start", "Line End"
+#         ])
+#     else:
+#         df = pd.DataFrame(rows)
+
+#     write_to_excel(df, sheet_name)
 
 
 def convert_snyk_vuln_json(json_path, sheet_name):
@@ -110,7 +120,14 @@ def convert_snyk_vuln_json(json_path, sheet_name):
             "Fixed In": ", ".join(v.get("fixedIn", [])),
             "References": ", ".join([r.get("url") for r in v.get("references", [])])
         })
-    df = pd.DataFrame(rows)
+    if not rows:
+        df = pd.DataFrame(columns=[
+            "ID", "Title", "Severity", "Package", "Version",
+            "CVSS", "CVEs", "Description", "Fixed In", "References"
+        ])
+    else:
+        df = pd.DataFrame(rows)
+        df = df.sort_values(by="Severity", ascending=True)
     write_to_excel(df, sheet_name)
 
 
@@ -124,10 +141,10 @@ def convert_trivy_vuln(json_path, sheet_name):
         vulns = r.get("Vulnerabilities", [])
         for v in vulns:
             rows.append({
+                "VulnerabilityID": v.get("VulnerabilityID"),
                 "Target": r.get("Target"),
                 "PkgName": v.get("PkgName"),
                 "InstalledVersion": v.get("InstalledVersion"),
-                "VulnerabilityID": v.get("VulnerabilityID"),
                 "Severity": v.get("Severity"),
                 "Title": v.get("Title"),
                 "Description": v.get("Description", "").strip().split("\n")[0],
@@ -138,11 +155,12 @@ def convert_trivy_vuln(json_path, sheet_name):
             })
     if not rows:
         df = pd.DataFrame(columns=[
-            "Target", "PkgName", "InstalledVersion", "VulnerabilityID", "Severity",
+            "VulnerabilityID", "Target", "PkgName", "InstalledVersion", "Severity",
             "Description", "FixedVersion", "CVSS Score", "CVSS Vector", "References"
         ])
     else:
         df = pd.DataFrame(rows)
+        df = df.sort_values(by="Severity", ascending=True)
     write_to_excel(df, sheet_name)
 
 
@@ -155,10 +173,10 @@ def convert_trivy_k8s(json_path, sheet_name):
         for result in res.get("Results", []):
             for m in result.get("Misconfigurations", []):
                 rows.append({
+                    "ID": m.get("ID"),
                     "Kind": res.get("Kind"),
                     "Name": res.get("Name"),
                     "Target": result.get("Target"),
-                    "ID": m.get("ID"),
                     "Title": m.get("Title"),
                     "Severity": m.get("Severity"),
                     "Message": m.get("Message"),
@@ -167,11 +185,13 @@ def convert_trivy_k8s(json_path, sheet_name):
                 })
     if not rows:
         df = pd.DataFrame(columns=[
-            "Kind", "Name", "Target", "ID", "Title",
+            "ID", "Kind", "Name", "Target", "Title",
             "Severity", "Message", "Resolution", "References"
         ])
     else:
         df = pd.DataFrame(rows)
+        df = df.sort_values(by="Severity", ascending=True)
+        
     write_to_excel(df, sheet_name)
 
 
@@ -188,11 +208,11 @@ def merge_semgrep_and_snyk_to_sast():
     df_semgrep["source"] = "semgrep"
     df_snyk["source"] = "snyk"
 
-    # Đồng bộ tên cột để merge
+    # sync column names
     df_semgrep.rename(columns={"Rule ID": "rule_id"}, inplace=True)
     df_snyk.rename(columns={"Rule ID": "rule_id"}, inplace=True)
 
-    # Nếu thiếu cột, thêm cột rỗng (để đảm bảo có đủ cho thứ tự yêu cầu)
+    # Add missing columns
     for col in ["rule_id", "Message", "File", "Start Line", "End Line", "Date"]:
         if col not in df_semgrep.columns:
             df_semgrep[col] = ""
@@ -206,7 +226,7 @@ def merge_semgrep_and_snyk_to_sast():
         df_snyk[selected_cols]
     ], ignore_index=True)
 
-    # Đổi lại tên "rule_id" về "Rule ID" nếu bạn muốn hiển thị đúng:
+    # sync column names
     df_combined.rename(columns={"rule_id": "Rule ID"}, inplace=True)
     df_combined.rename(columns={"source": "Source"}, inplace=True)
 
@@ -251,6 +271,12 @@ def merge_trivy_and_snyk_to_sca():
     df_sca = pd.concat([df_trivy_sca, df_snyk_sca], ignore_index=True)
     df_sca = df_sca[["Source", "ID", "Package", "Version", "Severity", "Remediation", "Reference","Date"]]
 
+    df_sca["Severity"] = df_sca["Severity"].astype(str).str.upper()
+    
+    severity_order = {"CRITICAL": 1, "HIGH": 2, "MEDIUM": 3, "LOW": 4, "UNKNOWN": 5}
+    df_sca["Severity_Sort"] = df_sca["Severity"].map(severity_order)
+    df_sca = df_sca.sort_values(by="Severity_Sort").drop(columns=["Severity_Sort"])
+
     with pd.ExcelWriter(output_file, engine="openpyxl", mode="a", if_sheet_exists="replace") as writer:
         df_sca.to_excel(writer, sheet_name="SCA", index=False)
 
@@ -294,14 +320,17 @@ def merge_trivy_and_snyk_to_image_scan():
     df_image = pd.concat([df_trivy_image, df_snyk_image], ignore_index=True)
     df_image = df_image[["Source", "CVE", "Title", "Severity", "Package", "Version", "Fixed_In", "References", "Date"]]
 
+    df_image["Severity"] = df_image["Severity"].astype(str).str.upper()
+    
+    severity_order = {"CRITICAL": 1, "HIGH": 2, "MEDIUM": 3, "LOW": 4, "UNKNOWN": 5}
+    df_image["Severity_Sort"] = df_image["Severity"].map(severity_order)
+    df_image = df_image.sort_values(by="Severity_Sort").drop(columns=["Severity_Sort"])
+    
     with pd.ExcelWriter(output_file, engine="openpyxl", mode="a", if_sheet_exists="replace") as writer:
         df_image.to_excel(writer, sheet_name="IMAGE_SCAN", index=False)
 
     print("✅ Merged 'trivy-image' and 'snyk-image' into sheet 'IMAGE_SCAN'")
 
-
-from openpyxl import load_workbook
-from openpyxl.styles import PatternFill
 
 def merge_devsecops_reports(file_today_path, file_yesterday_path, output_path):
     xls_today = pd.read_excel(file_today_path, sheet_name=None)
@@ -325,7 +354,13 @@ def merge_devsecops_reports(file_today_path, file_yesterday_path, output_path):
             compare_cols = [col for col in df_today.columns if col != 'Date']
 
             merged = pd.concat([df_today, df_yesterday], ignore_index=True)
-            merged.sort_values(by='Date', ascending=False, inplace=True)
+            if 'Severity' in merged.columns:
+                severity_order = {"Critical": 1, "High": 2, "Medium": 3, "Low": 4, "Unknown": 5}
+                merged["Severity_Sort"] = merged["Severity"].map(severity_order).fillna(999)
+                merged.sort_values(by=["Date", "Severity_Sort"], ascending=[False, True], inplace=True)
+                merged.drop(columns=["Severity_Sort"], inplace=True)
+            else:
+                merged.sort_values(by="Date", ascending=False, inplace=True)
             merged = merged.drop_duplicates(subset=compare_cols, keep='first')
 
             merged.to_excel(writer, sheet_name=sheet, index=False)

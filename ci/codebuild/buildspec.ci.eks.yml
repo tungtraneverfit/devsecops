@@ -55,7 +55,7 @@ phases:
       - snyk-to-html -i report/result/snyk-image.json -o report/html-result/snyk-image.html
       - echo "cluster scaning"
       - aws eks update-kubeconfig --name eks-worker-dev-us-w-2 --region us-west-2
-      - trivy k8s --report all --timeout 15m --skip-images --scanners vuln,secret,misconfig,rbac --format json -o report/result/trivy-k8s.json || true
+      - trivy k8s --report all --timeout 15m --skip-images --scanners vuln,secret,misconfig,rbac --severity HIGH,CRITICAL --format json -o report/result/trivy-k8s.json || true
       - echo "Report Processing"
       - aws s3 cp s3://$SECRET_BUCKET_NAME/$ENV/ . --recursive
       - trivy scan2html generate --scan2html-flags --output report/html-result/trivy.html --severity HIGH,CRITICAL --from report/result/trivy-fs.json,report/result/trivy-image.json,report/result/trivy-k8s.json
