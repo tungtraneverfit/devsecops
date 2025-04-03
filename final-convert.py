@@ -50,6 +50,7 @@ def convert_sarif_results(json_path, sheet_name):
         df = pd.DataFrame(columns=[
             "Rule ID", "Message", "File", "Start Line", "End Line",
         ])
+        df = df.drop_duplicates()
         df = df.sort_values(by="Rule ID", ascending=True)
     else:
         df = pd.DataFrame(parsed)
@@ -127,6 +128,7 @@ def convert_snyk_vuln_json(json_path, sheet_name):
         ])
     else:
         df = pd.DataFrame(rows)
+        df = df.drop_duplicates()
         df = df.sort_values(by="Severity", ascending=True)
     write_to_excel(df, sheet_name)
 
@@ -160,6 +162,7 @@ def convert_trivy_vuln(json_path, sheet_name):
         ])
     else:
         df = pd.DataFrame(rows)
+        df = df.drop_duplicates()
         df = df.sort_values(by="Severity", ascending=True)
     write_to_excel(df, sheet_name)
 
@@ -190,6 +193,7 @@ def convert_trivy_k8s(json_path, sheet_name):
         ])
     else:
         df = pd.DataFrame(rows)
+        df = df.drop_duplicates()
         df = df.sort_values(by="Severity", ascending=True)
         
     write_to_excel(df, sheet_name)
@@ -407,4 +411,4 @@ if __name__ == "__main__":
     merge_semgrep_and_snyk_to_sast()
     merge_trivy_and_snyk_to_sca()
     merge_trivy_and_snyk_to_image_scan()
-    merge_devsecops_reports('devsecops-report-02-04-25.xlsx', 'devsecops-report-01-04-25.xlsx', 'merged_output.xlsx')
+    # merge_devsecops_reports('devsecops-report-02-04-25.xlsx', 'devsecops-report-03-04-25.xlsx', 'merged_output.xlsx')
