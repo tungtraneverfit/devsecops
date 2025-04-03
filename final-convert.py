@@ -9,7 +9,7 @@ from openpyxl.styles import PatternFill
 
 today = datetime.now()
 today_str = today.strftime("%d-%m-%y")
-output_file = f"devsecops-report-{today_str}.xlsx"
+output_file = f"report/devsecops-report-{today_str}.xlsx"
 
 
 def write_to_excel(df, sheet_name):
