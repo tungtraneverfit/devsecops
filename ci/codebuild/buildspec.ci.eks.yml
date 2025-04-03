@@ -61,6 +61,7 @@ phases:
       - trivy scan2html generate --scan2html-flags --output report/html-result/trivy.html --severity HIGH,CRITICAL --from report/result/trivy-fs.json,report/result/trivy-image.json,report/result/trivy-k8s.json
       - python3 gitleaks.py report/result/gitleaks.sarif report/html-result/gitleaks.html
       - python3 semgrep.py report/result/semgrep.sarif report/html-result/semgrep.html
+      - pip install pandas openpyxl
       - python3 final-convert.py
   post_build:
     commands:
